@@ -1,0 +1,7 @@
+# Python virtual environment
+venv/
+
+# From Nuitka
+**/*.build/
+**/*.dist/
+**/*.onefile-build
