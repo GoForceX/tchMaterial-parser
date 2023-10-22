@@ -28,7 +28,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import (
     QComboBox,
-    QGridLayout,
+    QProgressBar,
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -46,6 +46,7 @@ from PySide6.QtWidgets import (
 
 # 获取操作系统类型
 os_name = platform.system()
+bookList = None
 
 
 # 解析URL
@@ -82,8 +83,12 @@ def getDefaultFilename(contentId):
     except:
         return None
 
-class SignalEmitter(QObject):
+
+class DownloadSignalEmitter(QObject):
+    size = Signal(int)
+    progress = Signal(int)
     finished = Signal(str)
+
 
 class DownloadWorker(QRunnable):
     def __init__(self, wnd, url, save_path):
@@ -91,13 +96,18 @@ class DownloadWorker(QRunnable):
         self.wnd = wnd
         self.url = url
         self.save_path = save_path
-        self.emitter = SignalEmitter()
+        self.emitter = DownloadSignalEmitter()
 
     def run(self):
         response = requests.get(self.url, stream=True)
+        total_size = int(response.headers.get("Content-Length", 0))
+        self.emitter.size.emit(total_size)
         with open(self.save_path, "wb") as file:
-            for chunk in response.iter_content(chunk_size=8192):  # 分块下载
+            downloaded = 0
+            for chunk in response.iter_content(chunk_size=131072):  # 分块下载
                 file.write(chunk)
+                downloaded += len(chunk)
+                self.emitter.progress.emit(downloaded)
         self.emitter.finished.emit(self.save_path)
 
 
@@ -182,9 +192,6 @@ class BookHelper:
                 tempHier["children"][i["id"]] = i
 
         return self.parsedHierarchy
-
-
-bookList = BookHelper().fetch_book_list()
 
 
 class Ui_MainWindow:
@@ -311,7 +318,7 @@ class Ui_MainWindow:
         self.verticalLayout.addLayout(self.textLayout)
 
         self.buttonLayout = QHBoxLayout()
-        self.buttonLayout.setSpacing(64)
+        self.buttonLayout.setSpacing(12)
         self.buttonLayout.setObjectName("buttonLayout")
         self.buttonLayout.setContentsMargins(48, -1, 48, -1)
 
@@ -322,15 +329,36 @@ class Ui_MainWindow:
 
         self.downloadBtn = QPushButton(self.mainWidget)
         self.downloadBtn.setObjectName("downloadBtn")
-        self.textEdit.setSizePolicy(sizePolicy)
-        self.downloadBtn.setMinimumSize(QSize(150, 40))
+        self.downloadBtn.setSizePolicy(sizePolicy)
+        self.downloadBtn.setMinimumSize(QSize(0, 40))
 
         self.buttonLayout.addWidget(self.downloadBtn)
 
+        self.downloadLayout = QVBoxLayout()
+        self.downloadLayout.setObjectName("downloadLayout")
+        self.downloadLayout.setSpacing(8)
+        self.downloadLayout.setContentsMargins(12, -1, 12, -1)
+
+        self.downloadProgress = QLabel(self.mainWidget)
+        self.downloadProgress.setObjectName("downloadProgress")
+        self.downloadProgress.setAlignment(Qt.AlignCenter)
+
+        self.downloadLayout.addWidget(self.downloadProgress)
+
+        self.downloadProgressBar = QProgressBar(self.mainWidget)
+        self.downloadProgressBar.setObjectName("downloadProgressBar")
+        self.downloadProgressBar.setValue(0)
+        self.downloadProgressBar.setAlignment(Qt.AlignCenter)
+        self.downloadProgressBar.setMinimumSize(QSize(150, 30))
+
+        self.downloadLayout.addWidget(self.downloadProgressBar)
+
+        self.buttonLayout.addLayout(self.downloadLayout)
+
         self.copyBtn = QPushButton(self.mainWidget)
         self.copyBtn.setObjectName("copyBtn")
-        self.textEdit.setSizePolicy(sizePolicy)
-        self.copyBtn.setMinimumSize(QSize(150, 40))
+        self.copyBtn.setSizePolicy(sizePolicy)
+        self.copyBtn.setMinimumSize(QSize(0, 40))
 
         self.buttonLayout.addWidget(self.copyBtn)
 
@@ -407,6 +435,14 @@ f883fd8e&catalogType=tchMaterial&subCatalog=tchMaterial
 
         for i in ["---"] + [bookList[k]["name"] for k in bookList.keys()]:
             self.comboBox_1.addItem(i)
+
+        self.downloadProgress.setText(
+            QCoreApplication.translate(
+                "MainWindow",
+                "等待下载",
+                None,
+            )
+        )
 
     def TrySelEvent(self, index, event):
         try:
@@ -537,7 +573,6 @@ f883fd8e&catalogType=tchMaterial&subCatalog=tchMaterial
         if len(urls) > 1:
             QMessageBox.information(wnd, "提示", "您选择了多个链接，将在选定的文件夹中使用教材名称作为文件名进行下载。")
             dir_path = QFileDialog.getExistingDirectory(wnd, "选择文件夹")  # 选择文件夹
-            print(dir_path)
             if os_name == "Windows":
                 dir_path = dir_path.replace("/", "\\")
             if not dir_path:
@@ -562,18 +597,33 @@ f883fd8e&catalogType=tchMaterial&subCatalog=tchMaterial
                     os.path.join(os.getcwd(), default_filename),
                     "PDF files (*.pdf);;All files (*.*)",
                 )  # 选择保存路径
-                print(save_path)
                 if os_name == "Windows":
                     save_path = save_path.replace("/", "\\")
 
                 if not save_path:
                     return
-                
+
             if not self.threadPool:
                 self.threadPool = QThreadPool()
 
+            self.downloadBtn.setEnabled(False)
+
             worker = DownloadWorker(wnd, pdf_url, save_path)
+            worker.emitter.size.connect(self.downloadProgressBar.setMaximum)
+            worker.emitter.progress.connect(self.downloadProgressBar.setValue)
+            worker.emitter.progress.connect(
+                lambda value: self.downloadProgress.setText(
+                    f"{value / 1024 / 1024:.2f}MB / {self.downloadProgressBar.maximum() / 1024 / 1024:.2f}MB"
+                )
+            )
             worker.emitter.finished.connect(partial(showFinishMsg, wnd))
+            worker.emitter.finished.connect(
+                lambda _: self.downloadProgress.setText(f"等待下载")
+            )
+            worker.emitter.finished.connect(
+                lambda _: self.downloadProgressBar.setValue(0)
+            )
+            worker.emitter.finished.connect(lambda _: self.downloadBtn.setEnabled(True))
             self.threadPool.start(worker)
 
         if failed_links:
@@ -588,7 +638,15 @@ icon = QIcon("favicon.ico")
 app.setWindowIcon(icon)
 
 MainWindow = QMainWindow()
+
+try:
+    bookList = BookHelper().fetch_book_list()
+except:
+    QMessageBox.warning(MainWindow, "网络连接异常，程序将关闭。", "警告")  # 弹出警告窗口
+    sys.exit()  # 退出自身进程
+
 Ui_MainWindow().setupUi(MainWindow)
+
 MainWindow.show()
 
 sys.exit(app.exec())
