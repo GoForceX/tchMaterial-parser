@@ -196,7 +196,7 @@ class Ui_MainWindow:
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(500, 650)
+        MainWindow.resize(600, 550)
         self.mainWidget = QWidget(MainWindow)
         self.mainWidget.setObjectName("mainWidget")
         self.verticalLayout = QVBoxLayout()
@@ -231,42 +231,52 @@ class Ui_MainWindow:
 
         self.menuParentLayout.addItem(self.menuLeftSpacer)
 
-        self.menuGridLayout = QGridLayout()
-        self.menuGridLayout.setObjectName("menuGridLayout")
-        self.menuGridLayout.setHorizontalSpacing(24)
-        self.menuGridLayout.setContentsMargins(12, -1, 12, -1)
+        self.menuVerticalLayout = QVBoxLayout()
+        self.menuVerticalLayout.setObjectName("menuVerticalLayout")
+
+        self.menuRow1 = QHBoxLayout()
+        self.menuRow1.setObjectName("menuRow1")
+        self.menuRow1.setSpacing(24)
+
+        self.menuVerticalLayout.addLayout(self.menuRow1)
 
         self.comboBox_1 = QComboBox(self.mainWidget)
         self.comboBox_1.setObjectName("comboBox_1")
-        self.comboBox_1.setMinimumSize(QSize(96, 24))
-        self.menuGridLayout.addWidget(self.comboBox_1, 0, 0, 1, 1)
+        self.comboBox_1.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        self.menuRow1.addWidget(self.comboBox_1)
 
         self.comboBox_2 = QComboBox(self.mainWidget)
         self.comboBox_2.setObjectName("comboBox_2")
-        self.comboBox_2.setMinimumSize(QSize(96, 24))
-        self.menuGridLayout.addWidget(self.comboBox_2, 0, 1, 1, 1)
+        self.comboBox_2.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        self.menuRow1.addWidget(self.comboBox_2)
 
         self.comboBox_3 = QComboBox(self.mainWidget)
         self.comboBox_3.setObjectName("comboBox_3")
-        self.comboBox_3.setMinimumSize(QSize(96, 24))
-        self.menuGridLayout.addWidget(self.comboBox_3, 0, 2, 1, 1)
+        self.comboBox_3.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        self.menuRow1.addWidget(self.comboBox_3)
 
         self.comboBox_4 = QComboBox(self.mainWidget)
         self.comboBox_4.setObjectName("comboBox_4")
-        self.comboBox_4.setMinimumSize(QSize(96, 24))
-        self.menuGridLayout.addWidget(self.comboBox_4, 1, 0, 1, 1)
+        self.comboBox_4.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        self.menuRow1.addWidget(self.comboBox_4)
+
+        self.menuRow2 = QHBoxLayout()
+        self.menuRow2.setObjectName("menuRow2")
+        self.menuRow2.setSpacing(24)
+
+        self.menuVerticalLayout.addLayout(self.menuRow2)
 
         self.comboBox_5 = QComboBox(self.mainWidget)
         self.comboBox_5.setObjectName("comboBox_5")
-        self.comboBox_5.setMinimumSize(QSize(96, 24))
-        self.menuGridLayout.addWidget(self.comboBox_5, 1, 1, 1, 1)
+        self.comboBox_5.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        self.menuRow2.addWidget(self.comboBox_5)
 
         self.comboBox_6 = QComboBox(self.mainWidget)
         self.comboBox_6.setObjectName("comboBox_6")
-        self.comboBox_6.setMinimumSize(QSize(96, 24))
-        self.menuGridLayout.addWidget(self.comboBox_6, 1, 2, 1, 1)
+        self.comboBox_6.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        self.menuRow2.addWidget(self.comboBox_6)
 
-        self.menuParentLayout.addLayout(self.menuGridLayout)
+        self.menuParentLayout.addLayout(self.menuVerticalLayout)
 
         self.menuRightSpacer = QSpacerItem(
             40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum
@@ -287,9 +297,6 @@ class Ui_MainWindow:
         self.textEdit = QTextEdit(self.mainWidget)
         self.textEdit.setObjectName("textEdit")
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.textEdit.sizePolicy().hasHeightForWidth())
         self.textEdit.setSizePolicy(sizePolicy)
         self.textEdit.setMinimumSize(QSize(400, 0))
 
@@ -304,20 +311,33 @@ class Ui_MainWindow:
         self.verticalLayout.addLayout(self.textLayout)
 
         self.buttonLayout = QHBoxLayout()
-        self.buttonLayout.setSpacing(24)
+        self.buttonLayout.setSpacing(64)
         self.buttonLayout.setObjectName("buttonLayout")
         self.buttonLayout.setContentsMargins(48, -1, 48, -1)
+
+        self.btnLeftSpacer = QSpacerItem(
+            40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum
+        )
+        self.buttonLayout.addItem(self.btnLeftSpacer)
+
         self.downloadBtn = QPushButton(self.mainWidget)
         self.downloadBtn.setObjectName("downloadBtn")
-        self.downloadBtn.setMinimumSize(QSize(0, 40))
+        self.textEdit.setSizePolicy(sizePolicy)
+        self.downloadBtn.setMinimumSize(QSize(150, 40))
 
         self.buttonLayout.addWidget(self.downloadBtn)
 
         self.copyBtn = QPushButton(self.mainWidget)
         self.copyBtn.setObjectName("copyBtn")
-        self.copyBtn.setMinimumSize(QSize(0, 40))
+        self.textEdit.setSizePolicy(sizePolicy)
+        self.copyBtn.setMinimumSize(QSize(150, 40))
 
         self.buttonLayout.addWidget(self.copyBtn)
+
+        self.btnRightSpacer = QSpacerItem(
+            40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum
+        )
+        self.buttonLayout.addItem(self.btnRightSpacer)
 
         self.verticalLayout.addLayout(self.buttonLayout)
 
